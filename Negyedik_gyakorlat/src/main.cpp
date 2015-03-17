@@ -159,7 +159,7 @@ void mouseFunction(GLFWwindow *window, int button, int action, int mods)
 
 void keyFunction(GLFWwindow *window, int key, int scanCode, int action, int mods)
 {
-    if (action == GLFW_PRESS)
+    if (action == GLFW_REPEAT)
     {
         switch (key)
         {
