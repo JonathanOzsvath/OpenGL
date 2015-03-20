@@ -7,10 +7,10 @@ out vec3 color;
 //model és a view matrix szorzata
 uniform mat4 ModelViewMatrix;
 uniform mat3 NormalMatrix;
-//model
+//model view projection
 uniform mat4 MVP;
-uniform vec4 LightPosition;
 
+uniform vec4 LightPosition;
 uniform vec3 Ld;
 uniform vec3 Kd;
 
