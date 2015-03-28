@@ -19,9 +19,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{923ACEE4-36DF-49FE-B708-178CA276DBD4}</ProjectGuid>
+    <ProjectGuid>{F5035546-0783-49EC-B9DF-7051A8605B72}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>SphereWithPlane</RootNamespace>
+    <RootNamespace>RandomSphare</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -70,23 +70,19 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <ExecutablePath>C:\openGL\OpenGLSolution\SphereWithPlane\src;$(ExecutablePath)</ExecutablePath>
-    <IncludePath>C:\openGL\OpenGLSolution\SphereWithPlane\include;$(IncludePath)</IncludePath>
+    <ExecutablePath>C:\openGL\OpenGLSolution\RandomSphare\src;$(ExecutablePath)</ExecutablePath>
+    <IncludePath>C:\openGL\OpenGLSolution\RandomSphare\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <ExecutablePath>C:\openGL\OpenGLSolution\SphereWithPlane\src;$(ExecutablePath)</ExecutablePath>
-    <IncludePath>C:\openGL\OpenGLSolution\SphereWithPlane\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <ExecutablePath>C:\openGL\OpenGLSolution\SphereWithPlane\src;$(ExecutablePath)</ExecutablePath>
-    <IncludePath>C:\openGL\OpenGLSolution\SphereWithPlane\include;$(IncludePath)</IncludePath>
+    <ExecutablePath>C:\openGL\OpenGLSolution\RandomSphare\src;$(ExecutablePath)</ExecutablePath>
+    <IncludePath>C:\openGL\OpenGLSolution\RandomSphare\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <ExecutablePath>C:\openGL\OpenGLSolution\SphereWithPlane\src;$(ExecutablePath)</ExecutablePath>
-    <IncludePath>C:\openGL\OpenGLSolution\SphereWithPlane\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -95,12 +91,12 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\openGL\OpenGLSolution\OpenGLStaticLib\include;C:\openGL\OpenGLSolution\Libraries\glm;$(SolutionDir)\libraries\ingredients;$(SolutionDir)\libraries\glfw\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\openGL\OpenGLSolution\OpenGLStaticLib\include;C:\openGL\OpenGLSolution\Libraries\glm;$(SolutionDir)\Libraries\ingredients;$(SolutionDir)\Libraries\glfw\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;$(SolutionDir)\Libraries\ingredients\Debug\ingredients.lib;$(SolutionDir)\Libraries\glfw\lib-vc2013\glfw3.lib;opengl32.lib</AdditionalDependencies>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;$(SolutionDir)\Libraries\ingredients\Debug\ingredients.lib;$(SolutionDir)\Libraries\glfw\lib-vc2013\glfw3.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -110,12 +106,10 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)\libraries\ingredients;$(SolutionDir)\libraries\glfw\include;$(SolutionDir)\OpenGLStaticLib\include;$(SolutionDir)\libraries\glm</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;$(SolutionDir)\Libraries\ingredients\Debug\ingredients.lib;$(SolutionDir)\Libraries\glfw\lib-vc2013\glfw3.lib;opengl32.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -127,14 +121,14 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\openGL\OpenGLSolution\OpenGLStaticLib\include;C:\openGL\OpenGLSolution\Libraries\glm;$(SolutionDir)\Libraries\ingredients;$(SolutionDir)\Libraries\glfw\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\openGL\OpenGLSolution\OpenGLStaticLib\include;C:\openGL\OpenGLSolution\Libraries\glm;C:\openGL\OpenGLSolution\Libraries\ingredients;C:\openGL\OpenGLSolution\Libraries\glfw\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;$(SolutionDir)\Libraries\ingredients\Debug\ingredients.lib;$(SolutionDir)\Libraries\glfw\lib-vc2013\glfw3.lib;opengl32.lib</AdditionalDependencies>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;$(SolutionDir)\libraries\ingredients\Debug\ingredients.lib;$(SolutionDir)\libraries\glfw\lib-vc2013\glfw3.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -146,23 +140,21 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\openGL\OpenGLSolution\OpenGLStaticLib\include;C:\openGL\OpenGLSolution\Libraries\glm;$(SolutionDir)\libraries\ingredients;$(SolutionDir)\libraries\glfw\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;$(SolutionDir)\Libraries\ingredients\Debug\ingredients.lib;$(SolutionDir)\Libraries\glfw\lib-vc2013\glfw3.lib;opengl32.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="src\SphareWithPlane.cpp" />
-  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\OpenGLStaticLib\OpenGLStaticLib.vcxproj">
       <Project>{65b26c4f-990e-46ce-a8fc-5caafe554c44}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\RandomSphare.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

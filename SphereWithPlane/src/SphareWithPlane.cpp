@@ -37,7 +37,7 @@ glm::vec3 moving(r*sinf(radians(phi))*cosf(radians(theta)), r*sinf(radians(phi))
 void init()
 {
 	glClearColor(1.0, 1.0, 1.0, 1.0);
-	glEnable(GL_CULL_FACE);
+	//glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
 	
 	glm::mat4 tmp(1.0);
@@ -112,7 +112,7 @@ void mainloop()
 		program.setUniform("Kd", kd);
 
 		//cube->render();
-		plane->render();
+		//plane->render();
 		//sphere->render();
 		torus->render();
 		//teapot->render();
@@ -201,6 +201,16 @@ void keyFunction(GLFWwindow *window, int key, int scanCode, int action, int mods
 		case GLFW_KEY_COMMA:
 			moving.z -= 1;
 			cout << "z: " << moving.z << endl;
+			break;
+		case GLFW_KEY_R:
+			r += 0.1;
+			moving = vec3(r*sinf(radians(phi))*cosf(radians(theta)), r*sinf(radians(phi))*sinf(radians(theta)), r*cosf(radians(phi)));
+			cout << "r: " << r << endl;
+			break;
+		case GLFW_KEY_T:
+			r -= 0.1;
+			moving = vec3(r*sinf(radians(phi))*cosf(radians(theta)), r*sinf(radians(phi))*sinf(radians(theta)), r*cosf(radians(phi)));
+			cout << "r: " << r << endl;
 			break;
 		default:
 			printf("Bad key :(\n");
