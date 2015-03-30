@@ -95,7 +95,7 @@ void init()
 
 	sphereProg.setUniform("LightPosition", view * worldLight);
 
-	CubeMapTexture texture("src/texture/cubemap_night/night", 256);
+	CubeMapTexture texture("src/texture/citadella/night", 2048);
 }
 
 void mainloop()
@@ -121,7 +121,7 @@ void mainloop()
 		sphereProg.setUniform("Ld", vec3(1.0f, 1.0f, 1.0f));
 		sphereProg.setUniform("Kd", vec3(1.0f, 1.0f, 0.0f));
 
-		sphere->render();
+		//sphere->render();
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
