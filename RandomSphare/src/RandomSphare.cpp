@@ -14,7 +14,7 @@ using namespace glm;
 using namespace std;
 
 GLFWwindow *window;
-GLuint width = 1280, height = 720;
+GLuint width = 1920, height = 1080;
 GLProgram prog;
 
 VBOSphere *sphere;

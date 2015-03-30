@@ -113,8 +113,8 @@ void mainloop()
 
 		//cube->render();
 		//plane->render();
-		//sphere->render();
-		torus->render();
+		sphere->render();
+		//torus->render();
 		//teapot->render();
 		//mesh->render();
 

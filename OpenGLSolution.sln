@@ -13,6 +13,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SphereWithPlane", "SphereWi
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RandomSphare", "RandomSphare\RandomSphare.vcxproj", "{F5035546-0783-49EC-B9DF-7051A8605B72}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CubeWithTexture", "CubeWithTexture\CubeWithTexture.vcxproj", "{92A6AC63-F220-4160-B138-D739884D2049}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -60,6 +62,12 @@ Global
 		{F5035546-0783-49EC-B9DF-7051A8605B72}.Release|Win32.ActiveCfg = Release|Win32
 		{F5035546-0783-49EC-B9DF-7051A8605B72}.Release|Win32.Build.0 = Release|Win32
 		{F5035546-0783-49EC-B9DF-7051A8605B72}.Release|x64.ActiveCfg = Release|Win32
+		{92A6AC63-F220-4160-B138-D739884D2049}.Debug|Win32.ActiveCfg = Debug|Win32
+		{92A6AC63-F220-4160-B138-D739884D2049}.Debug|Win32.Build.0 = Debug|Win32
+		{92A6AC63-F220-4160-B138-D739884D2049}.Debug|x64.ActiveCfg = Debug|Win32
+		{92A6AC63-F220-4160-B138-D739884D2049}.Release|Win32.ActiveCfg = Release|Win32
+		{92A6AC63-F220-4160-B138-D739884D2049}.Release|Win32.Build.0 = Release|Win32
+		{92A6AC63-F220-4160-B138-D739884D2049}.Release|x64.ActiveCfg = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
