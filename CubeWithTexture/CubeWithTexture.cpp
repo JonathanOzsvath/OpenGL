@@ -44,11 +44,11 @@ void compileShader()
 	envProg.link();
 
 	GLShader sphereVert(GLShader::GLShaderType::VERTEX);
-	sphereVert.readShader("src/shader/sphere.vert");
+	sphereVert.readShader("src/shader/sphere.vs");
 	sphereVert.compileShader();
 
 	GLShader sphereFrag(GLShader::GLShaderType::FRAGMENT);
-	sphereFrag.readShader("src/shader/sphere.frag");
+	sphereFrag.readShader("src/shader/sphere.fs");
 	sphereFrag.compileShader();
 
 	sphereProg.setShaders({ sphereVert.getId(), sphereFrag.getId() });
@@ -89,13 +89,32 @@ void init()
 
 	view = glm::lookAt(camPos, camLook, up);
 
+	envProg.use();
 	envProg.setUniform("LightPosition", view * vec4(0.0f, 0.0f, 0.0f, 1.0f));
 	envProg.setUniform("Kd", vec3(0.9f, 0.5f, 0.3f));
 	envProg.setUniform("Ld", vec3(1.0f, 1.0f, 1.0f));
 
-	sphereProg.setUniform("LightPosition", view * worldLight);
+	//CubeMapTexture texture("src/texture/citadella/night", 2048);
+	CubeMapTexture texture("src/texture/cubemap_night/night", 256);
 
-	CubeMapTexture texture("src/texture/citadella/night", 2048);
+	sphereProg.use();
+	sphereProg.setUniform("Light.Intensity", vec3(1.0f, 1.0f, 1.0f));
+
+	// Load texture file
+	GLint w, h;
+	glActiveTexture(GL_TEXTURE0);
+	GLubyte * data = TGAIO::read("src/texture/brick1.tga", w, h);
+
+	GLuint texID;
+	glGenTextures(1, &texID);
+
+	glBindTexture(GL_TEXTURE_2D, texID);
+	glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA8, w, h);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, data);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+	delete[] data;
 }
 
 void mainloop()
@@ -105,7 +124,6 @@ void mainloop()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		model = mat4(1.0f);
-		model *= rotate(radians(180.0f), vec3(1.0f, 0.0f, 0.0f));
 
 		envProg.use();
 		envSetMatrices();
@@ -115,13 +133,15 @@ void mainloop()
 
 		model = mat4(1.0f);
 		sphereProg.use();
-		glm::mat4 mv = view * model;
 		sphereSetMatrices();
 
-		sphereProg.setUniform("Ld", vec3(1.0f, 1.0f, 1.0f));
-		sphereProg.setUniform("Kd", vec3(1.0f, 1.0f, 0.0f));
+		sphereProg.setUniform("Light.Position", vec4(0.0f, 20.0f, 0.0f, 1.0f));
+		sphereProg.setUniform("Material.Kd", 0.9f, 0.9f, 0.9f);
+		sphereProg.setUniform("Material.Ks", 0.95f, 0.95f, 0.95f);
+		sphereProg.setUniform("Material.Ka", 0.1f, 0.1f, 0.1f);
+		sphereProg.setUniform("Material.Shininess", 100.0f);
 
-		//sphere->render();
+		sphere->render();
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
