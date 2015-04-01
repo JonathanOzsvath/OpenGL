@@ -4,6 +4,7 @@ in vec3 Position;
 in vec3 Normal;
 in vec2 TexCoord;
 
+
 //sampler2D a texturák kezelésére szolgáló típus
 layout(binding=0) uniform sampler2D Tex1;
 

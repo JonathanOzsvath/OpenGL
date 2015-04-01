@@ -5,29 +5,35 @@
 class Texture
 {
 public:
-	Texture(const char *);
+	Texture(const char *, int);
 	~Texture();
 
-private:
+	void loadTexture(const char *, int);
+	GLuint id;
 
+private:
 };
 
-Texture::Texture(const char * fname)
+Texture::Texture(const char * fName, int unit)
 {
-	GLint w, h;
-	glActiveTexture(GL_TEXTURE0);
-	GLubyte * data = TGAIO::read(fname, w, h);
-
-	GLuint texID;
-	glGenTextures(1, &texID);
-
-	glBindTexture(GL_TEXTURE_2D, texID);
-	glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA8, w, h);
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, data);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	loadTexture(fName, unit);
 }
 
 Texture::~Texture()
 {
+}
+
+void Texture::loadTexture(const char *fName,int unit)
+{
+	GLint w, h;
+	glActiveTexture(GL_TEXTURE0 );
+	GLubyte * data = TGAIO::read(fName, w, h);
+
+	glGenTextures(1, &this->id);
+
+	glBindTexture(GL_TEXTURE_2D, this->id);
+	glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA8, w, h);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, data);
+	/*glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);*/
 }

@@ -5,6 +5,8 @@
 #include "vbosphere.h"
 #include "Cube.h"
 #include "CubeMapTexture.h"
+#include "Texture.h"
+#include "Camera.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm\gtx\transform.hpp>
@@ -16,19 +18,35 @@ using namespace std;
 GLFWwindow *window;
 GLProgram envProg;
 GLProgram sphereProg;
-GLuint width = 1280, height = 720;
+GLuint width = 1920, height = 1080;
 
 vec4 worldLight = vec4(5.0f, 1.0f, 10.0f, 1.0f);
-vec3 camPos = vec3(0.0f, 0.01f, 10.0f);
-vec3 camLook = vec3(0.0f, 0.0f, 0.0f);
-vec3 up = vec3(0.0f, 0.0f, 1.0f);
 
 mat4 model;
 mat4 view;
 mat4 projection;
 
+//Camera camera(vec3(0.0f, 0.01f, 10.0f), 25.0f);
 Cube *cube;
-VBOSphere *sphere;
+VBOSphere *sphere,*sphere2;
+Texture *texture, *texture2;
+
+bool keys[1024];
+bool firstMouse = true;
+glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+GLfloat yaw = -90.0f;	
+GLfloat pitch = 0.0f;
+GLfloat lastX = width / 2.0;
+GLfloat lastY = height / 2.0;
+GLfloat deltaTime = 0.0f;
+GLfloat lastFrame = 0.0f;
+
+void setView()
+{
+	view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+}
 
 void compileShader()
 {
@@ -86,35 +104,50 @@ void init()
 
 	cube = new Cube(50.0f, false);
 	sphere = new VBOSphere(1.0f, 360, 360);
+	sphere2 = new VBOSphere(2.0f, 360, 360);
 
-	view = glm::lookAt(camPos, camLook, up);
+	//view = camera.getView();
+	view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 
 	envProg.use();
 	envProg.setUniform("LightPosition", view * vec4(0.0f, 0.0f, 0.0f, 1.0f));
 	envProg.setUniform("Kd", vec3(0.9f, 0.5f, 0.3f));
 	envProg.setUniform("Ld", vec3(1.0f, 1.0f, 1.0f));
 
-	//CubeMapTexture texture("src/texture/citadella/night", 2048);
-	CubeMapTexture texture("src/texture/cubemap_night/night", 256);
+	//CubeMapTexture cubetexture("src/texture/citadella/night", 2048);
+	CubeMapTexture cubeTexture("src/texture/cubemap_night/night", 256);
 
 	sphereProg.use();
 	sphereProg.setUniform("Light.Intensity", vec3(1.0f, 1.0f, 1.0f));
 
-	// Load texture file
-	GLint w, h;
-	glActiveTexture(GL_TEXTURE0);
-	GLubyte * data = TGAIO::read("src/texture/brick1.tga", w, h);
+	texture = new Texture("src/texture/flower.tga", 0);
+	texture2 = new Texture("src/texture/brick1.tga", 1);
+}
 
-	GLuint texID;
-	glGenTextures(1, &texID);
-
-	glBindTexture(GL_TEXTURE_2D, texID);
-	glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA8, w, h);
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, data);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-	delete[] data;
+void do_movement()
+{
+	// Camera controls
+	GLfloat cameraSpeed = 5.0f * deltaTime;
+	if (keys[GLFW_KEY_W])
+	{
+		cameraPos += cameraSpeed * cameraFront;
+		setView();
+	}
+	if (keys[GLFW_KEY_S])
+	{
+		cameraPos -= cameraSpeed * cameraFront;
+		setView();
+	}
+	if (keys[GLFW_KEY_A])
+	{
+		cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+		setView();
+	}
+	if (keys[GLFW_KEY_D])
+	{
+		cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+		setView();
+	}
 }
 
 void mainloop()
@@ -123,7 +156,17 @@ void mainloop()
 	{
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		GLfloat currentFrame = glfwGetTime();
+		deltaTime = currentFrame - lastFrame;
+		lastFrame = currentFrame;
+		do_movement();
+		/*GLfloat radius = 10.0f;
+		GLfloat camX = sin(glfwGetTime()) * radius;
+		GLfloat camZ = cos(glfwGetTime()) * radius;
+		view = glm::lookAt(glm::vec3(camX, 0.0, camZ), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));*/
+		
 		model = mat4(1.0f);
+		model *= rotate(radians(180.0f), vec3(1.0f, 0.0f, 0.0f));
 
 		envProg.use();
 		envSetMatrices();
@@ -141,51 +184,95 @@ void mainloop()
 		sphereProg.setUniform("Material.Ka", 0.1f, 0.1f, 0.1f);
 		sphereProg.setUniform("Material.Shininess", 100.0f);
 
+		
+		glBindTexture(GL_TEXTURE_2D, texture->id);
+
 		sphere->render();
+
+		model = mat4(1.0);
+		model *= translate(vec3(10.0f, 0.0f, 10.0f));
+		sphereSetMatrices();
+		glBindTexture(GL_TEXTURE_2D, texture2->id);
+
+		sphere2->render();
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
 }
 
+
 void keyFunction(GLFWwindow *window, int key, int scanCode, int action, int mods)
 {
-
-	switch (key)
+	//view = camera.getKey(key);
+	/*GLfloat cameraSpeed = 0.05f;
+	if (key == GLFW_KEY_W)
 	{
-	case GLFW_KEY_UP:
-		view = glm::rotate(view, -0.1f, glm::vec3(1.0, 0.0, 0.0));
-		break;
-	case GLFW_KEY_DOWN:
-		view = glm::rotate(view, 0.1f, glm::vec3(1.0, 0.0, 0.0));
-		break;
-	case GLFW_KEY_LEFT:
-		view = glm::rotate(view, 0.1f, glm::vec3(0.0, 0.0, 1.0));
-		break;
-	case GLFW_KEY_RIGHT:
-		view = glm::rotate(view, -0.1f, glm::vec3(0.0, 0.0, 1.0));
-		break;
-	case GLFW_KEY_S:
-		view = glm::translate(view, glm::vec3(0.0, 0.1, 0.0));
-		break;
-	case GLFW_KEY_A:
-		view = glm::translate(view, glm::vec3(0.1, 0.0, 0.0));
-
-		break;
-	case GLFW_KEY_D:
-		view = glm::translate(view, glm::vec3(-0.1, 0.0, 0.1));
-		//move camera
-		break;
-	case GLFW_KEY_W:
-		view = glm::translate(view, glm::vec3(0.0, -0.1, 0.0));
-		//move camera
-		break;
-	default:
-		printf("Bad key :(\n");
-		break;
+		cameraPos += cameraSpeed * cameraFront;
+		setView();
 	}
+	if (key == GLFW_KEY_S)
+	{
+		cameraPos -= cameraSpeed * cameraFront;
+		setView();
+	}
+	if (key == GLFW_KEY_A)
+	{
+		cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+		setView();
+	}
+	if (key == GLFW_KEY_D)
+	{
+		cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+		setView();
+	}*/
+
+	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+		glfwSetWindowShouldClose(window, GL_TRUE);
+	if (key >= 0 && key < 1024)
+	{
+		if (action == GLFW_PRESS)
+			keys[key] = true;
+		else if (action == GLFW_RELEASE)
+			keys[key] = false;
+	}	
 
 	glfwPollEvents();
+}
+
+void mouse_callback(GLFWwindow* window, double xpos, double ypos)
+{
+	if (firstMouse)
+	{
+		lastX = xpos;
+		lastY = ypos;
+		firstMouse = false;
+	}
+
+	GLfloat xoffset = xpos - lastX;
+	GLfloat yoffset = lastY - ypos; // Reversed since y-coordinates go from bottom to left
+	lastX = xpos;
+	lastY = ypos;
+
+	GLfloat sensitivity = 0.05;	// Change this value to your liking
+	xoffset *= sensitivity;
+	yoffset *= sensitivity;
+
+	yaw += xoffset;
+	pitch += yoffset;
+
+	// Make sure that when pitch is out of bounds, screen doesn't get flipped
+	if (pitch > 89.0f)
+		pitch = 89.0f;
+	if (pitch < -89.0f)
+		pitch = -89.0f;
+
+	glm::vec3 front;
+	front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+	front.y = sin(glm::radians(pitch));
+	front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+	cameraFront = glm::normalize(front);
+	setView();
 }
 
 int main()
@@ -196,6 +283,9 @@ int main()
 	resize(width, height);
 
 	glfwSetKeyCallback(window, keyFunction);
+	glfwSetCursorPosCallback(window, mouse_callback);
+
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	mainloop();
 
