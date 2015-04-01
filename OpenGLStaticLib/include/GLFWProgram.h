@@ -21,8 +21,8 @@ GLFWwindow* initWindow(std::string s,int width,int height)
     GLFWwindow* window;
     // Open the window
     std::string title = s;
-    //window = glfwCreateWindow(width, height, title.c_str(), glfwGetPrimaryMonitor(), NULL);
-	window = glfwCreateWindow(width, height, title.c_str(), NULL, NULL);
+    window = glfwCreateWindow(width, height, title.c_str(), glfwGetPrimaryMonitor(), NULL);
+	//window = glfwCreateWindow(width, height, title.c_str(), NULL, NULL);
     if (!window)
     {
         glfwTerminate();

@@ -17,6 +17,9 @@ public:
 
 	void setView();
 	mat4 getView();
+	void do_movement(float);
+	void setKey(int, int, float);
+	void setMouse(double, double);
 
 private:
 	bool keys[1024];
@@ -28,8 +31,6 @@ private:
 	GLfloat pitch;
 	GLfloat lastX;
 	GLfloat lastY;
-	GLfloat deltaTime;
-	GLfloat lastFrame;
 	GLfloat movingArea;
 
 	mat4 view;
