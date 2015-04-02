@@ -3,8 +3,9 @@
 
 Camera::Camera(float width, float height, float movingArea)
 {
+	cornel = false;
 	firstMouse = true;
-	cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
+	cameraPos = glm::vec3(0.0f, 0.0f, 0.0f);
 	cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 	cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 	yaw = -90.0f;
@@ -13,6 +14,7 @@ Camera::Camera(float width, float height, float movingArea)
 	lastY = height / 2.0;
 	this->movingArea = movingArea;
 	setView();
+	setSpherePosition();
 }
 
 void Camera::setView()
@@ -27,33 +29,79 @@ mat4 Camera::getView()
 
 void Camera::do_movement(float deltaTime)
 {
-	GLfloat cameraSpeed = 5.0f * deltaTime;
-	if (keys[GLFW_KEY_W])
+	if (!cornel)
 	{
-		cameraPos += cameraSpeed * cameraFront;
-		setView();
-	}
-	if (keys[GLFW_KEY_S])
-	{
-		cameraPos -= cameraSpeed * cameraFront;
-		setView();
-	}
-	if (keys[GLFW_KEY_A])
-	{
-		cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
-		setView();
-	}
-	if (keys[GLFW_KEY_D])
-	{
-		cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
-		setView();
+		GLfloat cameraSpeed = 10.0f * deltaTime;
+		if (keys[GLFW_KEY_W])
+		{
+			vec3 tmp = cameraPos + (cameraFront*cameraSpeed);
+			if (abs(tmp.x) < movingArea-5 && abs(tmp.y) < movingArea-5 && abs(tmp.z) < movingArea-5)
+			{
+				cameraPos += cameraSpeed * cameraFront;
+				setView();
+				setSpherePosition();
+			}
+		}
+		if (keys[GLFW_KEY_S])
+		{
+			vec3 tmp = cameraPos - (cameraFront*cameraSpeed);
+			if (abs(tmp.x) < movingArea - 5 && abs(tmp.y) < movingArea - 5 && abs(tmp.z) < movingArea - 5)
+			{
+				cameraPos -= cameraSpeed * cameraFront;
+				setView();
+				setSpherePosition();
+			}
+		}
+		if (keys[GLFW_KEY_A])
+		{
+			vec3 tmp = cameraPos - (cameraFront*cameraSpeed);
+			if (abs(tmp.x) < movingArea - 5 && abs(tmp.y) < movingArea - 5 && abs(tmp.z) < movingArea - 5)
+			{
+				cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+				setView();
+				setSpherePosition();
+			}
+		}
+		if (keys[GLFW_KEY_D])
+		{
+			vec3 tmp = cameraPos + (cameraFront*cameraSpeed);
+			if (abs(tmp.x) < movingArea - 5 && abs(tmp.y) < movingArea - 5 && abs(tmp.z) < movingArea - 5)
+			{
+				cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+				setView();
+				setSpherePosition();
+			}
+		}
 	}
 }
 
 
 void Camera::setKey(int key, int action, float deltaTime)
 {
-	GLfloat cameraSpeed = 5.0f * deltaTime;
+	GLfloat cameraSpeed = 10.0f * deltaTime;
+	if (key ==GLFW_KEY_C && action == GLFW_PRESS)
+	{
+		if (!cornel)
+		{
+			tmpCameraPos = cameraPos;
+			tmpCameraFront = cameraFront;
+			tmpCameraUp = cameraUp;
+			cameraPos = vec3(movingArea, movingArea, movingArea);
+			cameraFront = vec3(0.0f - cameraPos.x, 0.0f - cameraPos.y, 0.0f - cameraPos.z);
+			cameraUp = vec3(0.0f, 1.0f, 0.0f);
+			setView();
+			cornel = true;
+		}
+		else
+		{
+			cornel = false;
+			cameraPos = tmpCameraPos;
+			cameraFront = tmpCameraFront;
+			cameraUp = tmpCameraUp;
+			setView();
+			setSpherePosition();
+		}
+	}
 	if (key >= 0 && key < 1024)
 	{
 		if (action == GLFW_PRESS)
@@ -95,4 +143,19 @@ void Camera::setMouse(double xpos, double ypos)
 	front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
 	cameraFront = glm::normalize(front);
 	setView();
+}
+
+void Camera::setCornel(bool cornel)
+{
+	this->cornel = cornel;
+}
+
+void Camera::setSpherePosition()
+{
+	spherePosition = cameraPos;
+}
+
+vec3 Camera::getSpherePosition()
+{
+	return spherePosition;
 }

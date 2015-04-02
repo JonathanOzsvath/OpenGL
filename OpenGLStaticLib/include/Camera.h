@@ -20,13 +20,19 @@ public:
 	void do_movement(float);
 	void setKey(int, int, float);
 	void setMouse(double, double);
+	void setSpherePosition();
+	vec3 getSpherePosition();
 
 private:
 	bool keys[1024];
 	bool firstMouse;
+	bool cornel;
 	glm::vec3 cameraPos;
 	glm::vec3 cameraFront;
 	glm::vec3 cameraUp;
+	glm::vec3 tmpCameraPos;
+	glm::vec3 tmpCameraFront;
+	glm::vec3 tmpCameraUp;
 	GLfloat yaw;
 	GLfloat pitch;
 	GLfloat lastX;
@@ -34,4 +40,7 @@ private:
 	GLfloat movingArea;
 
 	mat4 view;
+	vec3 spherePosition;
+
+	void setCornel(bool);
 };
