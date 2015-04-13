@@ -10,6 +10,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm\gtx\transform.hpp>
+#include <glm\gtx\rotate_vector.hpp>
 #include "tgaio.h"
 
 using namespace glm;
@@ -99,7 +100,8 @@ void init()
 	envProg.setUniform("Kd", vec3(0.9f, 0.5f, 0.3f));
 	envProg.setUniform("Ld", vec3(1.0f, 1.0f, 1.0f));
 	//CubeMapTexture cubetexture("src/texture/brick/brick", 1024);
-	CubeMapTexture cubetexture("src/texture/fu/fu", 768);
+	CubeMapTexture cubetexture("src/texture/citadella/night", 2048);
+	//CubeMapTexture cubetexture("src/texture/fu/fu", 768);
 
 	bigSphere = new VBOSphere(3.0f, 360, 360);
 	smallSphere = new VBOSphere(1.0f, 360, 360);
@@ -109,9 +111,9 @@ void init()
 
 	for (size_t i = 0; i < 10; i++)
 	{
-		mert1[i] = (rand() % 48 - 24);
-		mert2[i] = (rand() % 48 - 24);
-		mert3[i] = (rand() % 48 - 24);
+		mert1[i] = (rand() % 46 - 23);
+		mert2[i] = (rand() % 46 - 23);
+		mert3[i] = (rand() % 46 - 23);
 		modelStack.push_back(vec3(mert1[i], mert2[i], mert3[i]));
 	}
 
@@ -137,6 +139,12 @@ void init()
 	texture9 = new Texture("src/texture/premierLeague.tga", 9);
 	textureID.push_back(texture9->id);
 	textureID2 = textureID;
+}
+
+void update(float t, int i)
+{
+	//model *= rotate(radians(90.0f), vec3(1.0f, 0.0f, 0.0f));
+	model *= rotate(radians(t*-200.0f), modelStack[i]);
 }
 
 void mainloop()
@@ -176,7 +184,9 @@ void mainloop()
 		for (int i = 0; i < modelStack.size(); i++)
 		{
 			model = mat4(1.0f);
+			//model *= rotate(70.0f, vec3(0.0f, 1.0f, 0.0f));
 			model *= translate(modelStack[i]);
+			update(glfwGetTime(),i);
 			sphereSetMatrices();
 			glBindTexture(GL_TEXTURE_2D, textureID[i]);
 			smallSphere->render();
@@ -185,7 +195,7 @@ void mainloop()
 		
 		for (int i = 0; i < modelStack.size(); i++)
 		{
-			if (glm::distance(modelStack[i], camera.getSpherePosition()) < 4.0f)
+			if (glm::distance(modelStack[i], camera.getSpherePosition()) < 2.0f)
 			{
 				modelStack.erase(modelStack.begin() + i);
 				textureID.erase(textureID.begin() + i);
@@ -197,18 +207,6 @@ void mainloop()
 			cout << "TheGame end! :)" << endl;
 			exit(0);
 		}
-
-		/*model = mat4(1.0f);
-		model *= translate(vec3(10.0f, 10.0f, 0.0f));
-		sphereSetMatrices();
-		glBindTexture(GL_TEXTURE_2D, texture2->id);
-		smallSphere->render();
-
-		model = mat4(1.0f);
-		model *= translate(vec3(10.0f, 10.0f, 10.0f));
-		sphereSetMatrices();
-		glBindTexture(GL_TEXTURE_2D, texture3->id);
-		smallSphere->render();*/
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();

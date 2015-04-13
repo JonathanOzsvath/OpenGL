@@ -15,6 +15,12 @@ class Camera
 public:
 	Camera(float, float, float);
 
+	void setCameraPos(vec3);
+	vec3 getCameraPos();
+	void setCameraFront(vec3);
+	vec3 getCameraFront();
+	void setCameraUp(vec3);
+	vec3 getCameraUp();
 	void setView();
 	mat4 getView();
 	void do_movement(float);

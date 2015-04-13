@@ -1,140 +1,225 @@
-#include <cookbookogl.h>
-#include <GLFW/glfw3.h>
-#include <cstdlib>
-#include <cstdio>
-#include <string>
-#include <vector>
+#include "GLShader.h"
+#include "GLBuffer.h"
+#include "GLProgram.h"
+#include "GLFWProgram.h"
+#include "vbocube.h"
+#include "vboplane.h"
+#include "Cube.h"
+#include "CubeMapTexture.h"
+#include "Texture.h"
+#include "Camera.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <iostream>
-#include "GLShader.h"
-#include "GLProgram.h"
-#include "GLInformation.h"
-#include "GLBuffer.h"
-#include <array>
-#include "GLFWProgram.h"
+#include <glm\gtx\transform.hpp>
+#include <glm\gtx\rotate_vector.hpp>
+#include "tgaio.h"
+#include <string>
 
-
-
-typedef glm::mat4 MAT4;
-typedef glm::vec3 VEC3;
-typedef std::string String;
+using namespace glm;
+using namespace std;
 
 GLFWwindow *window;
-GLBuffer buffer(GLBuffer::BufferType::STATIC_DRAW);
-GLProgram fillShader;
-GLProgram lineShader;
+GLProgram envProg;
+GLProgram sphereProg;
+GLuint width = 1920, height = 1080;
 
+vec4 worldLight = vec4(0.0f, 0.0f, 5.0f, 1.0f);
 
-void CreateVBOs()
+mat4 model;
+mat4 projection;
+
+GLfloat deltaTime = 0.0f;
+GLfloat lastFrame = 0.0f;
+Camera camera(width, height, 25.0f);
+Cube *cube, *smallCube;
+GLfloat area = 50.0f, sArea = 10.0f;
+
+Texture *smallCubeTexture;
+
+VBOPlane *plane;
+
+vec3 smallCubePosition;
+
+void compileShader()
 {
+	GLShader envVert(GLShader::GLShaderType::VERTEX);
+	envVert.readShader("src/shader/spot.vs");
+	envVert.compileShader();
 
+	GLShader envFrag(GLShader::GLShaderType::FRAGMENT);
+	envFrag.readShader("src/shader/spot.fs");
+	envFrag.compileShader();
 
-    float positionData[] =
-    {
-
-        0.0, 0.4, 0.0,
-        -0.4, -0.4, 0.0,
-        0.4, -0.4, 0.0,
-        -0.2, 0.0, 0.0,
-        0.2, 0.0, 0.0,
-        0.0, -0.4, 0.0
-    };
-    //11 position data
-
-    float colorData[] =
-    {
-        1.0, 1.0, 0.0, 0.3,
-        1.0, 1.0, 0.0, 0.3,
-        1.0, 1.0, 0.0, 0.3,
-        1.0, 1.0, 0.0, 0.3,
-        1.0, 1.0, 0.0, 0.3,
-        1.0, 1.0, 0.0, 0.3
-    };
-
-    std::array<unsigned int, 9> indexData = {0,3,4, 1,5,3, 2,4,5 };
-
-    buffer.setVertexBuff(positionData, sizeof(positionData)/sizeof(*positionData));
-    buffer.setSizeOfFrag(4);
-    buffer.setFragBuff(colorData, sizeof(colorData)/sizeof(*colorData));
-    buffer.setIndexBuff(indexData.data(), indexData.size());
-    buffer.genBuffer();
+	envProg.setShaders({ envVert.getId(), envFrag.getId() });
+	envProg.link();
 }
 
-void initializeGL()
+void envSetMatrices()
 {
-    glClearColor(1.0, 1.0, 1.0, 1.0);
+	mat4 mv = camera.getView() * model;
+	envProg.setUniform("ModelViewMatrix", mv);
+	envProg.setUniform("ModelMatrix", model);
+	envProg.setUniform("NormalMatrix",
+		mat3(vec3(mv[0]), vec3(mv[1]), vec3(mv[2])));
+	envProg.setUniform("MVP", projection * mv);
+}
 
-    GLShader fragmentShader(GLShader::GLShaderType::FRAGMENT);
-    fragmentShader.readShader("src/shader/basic.frag");
-    fragmentShader.compileShader();
+void resize(int w, int h)
+{
+	glViewport(0, 0, w, h);
+	width = w;
+	height = h;
+	projection = glm::perspective(glm::radians(60.0f), (float)w / h, 0.3f, 300.0f);
+}
 
-    GLShader vertexShader(GLShader::GLShaderType::VERTEX);
-    vertexShader.readShader("src/shader/basic.vert");
-    vertexShader.compileShader();
+void init()
+{
+	compileShader();
+	glClearColor(0.0f, 1.0f, 1.0f, 1.0f);
+	glEnable(GL_DEPTH_TEST);
 
-    fillShader.setShaders({ fragmentShader.getId(), vertexShader.getId() });
-    fillShader.link();
-    CreateVBOs();
+	//cube = new Cube(area, false);
+	smallCube = new Cube(sArea,true);
+	plane = new VBOPlane(50.0f, 50.0f, 1, 1);
+	envProg.use();
 	
-    GLShader fragmentShader1(GLShader::GLShaderType::FRAGMENT);
-    fragmentShader1.readShader("src/shader/basic1.frag");
-    fragmentShader1.compileShader();
+	for (int i = 0; i < 4; i++)
+	{
+		string str = "Spot[" + to_string(i) + "].intensity";
+		const char *tmpPosition = str.c_str();
+		envProg.setUniform(tmpPosition, vec3(1.0f, 1.0f, 1.0f));
+		str = "Spot[" + to_string(i) + "].exponent";
+		tmpPosition = str.c_str();
+		envProg.setUniform(tmpPosition, 30.0f);
+		str = "Spot[" + to_string(i) + "].cutoff";
+		tmpPosition = str.c_str();
+		envProg.setUniform(tmpPosition, 15.0f);
+	}
+	/*envProg.setUniform("Spot[0].intensity", vec3(1.0f, 1.0f, 1.0f));
+	envProg.setUniform("Spot[0].exponent", 30.0f);
+	envProg.setUniform("Spot[0].cutoff", 15.0f);
+	envProg.setUniform("Spot[1].intensity", vec3(1.0f, 1.0f, 1.0f));
+	envProg.setUniform("Spot[1].exponent", 30.0f);
+	envProg.setUniform("Spot[1].cutoff", 15.0f);*/
+	
+	CubeMapTexture cubetexture("src/texture/brick/brick", 1024);
+	smallCubeTexture = new Texture("src/texture/flower.tga", 0);
 
-    GLShader vertexShader1(GLShader::GLShaderType::VERTEX);
-    vertexShader1.readShader("src/shader/basic.vert");
-    vertexShader1.compileShader();
-
-    lineShader.setShaders({ fragmentShader1.getId(), vertexShader1.getId() });
-    lineShader.link();
+	smallCubePosition = vec3(0.0f, sArea / 2.0f, 0.0f);
 }
 
-
-void mainLoop()
+void mainloop()
 {
-    while (!glfwWindowShouldClose(window) && !glfwGetKey(window, GLFW_KEY_ESCAPE))
-    {
+	while (!glfwWindowShouldClose(window) && !glfwGetKey(window, GLFW_KEY_ESCAPE))
+	{
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		GLfloat currentFrame = glfwGetTime();
+		deltaTime = currentFrame - lastFrame;
+		lastFrame = currentFrame;
+		camera.do_movement(deltaTime);
 
-        /* check opengl error
+		vec4 lightPos[4];
+		lightPos[0]= vec4(area / 2.0f, area / 2.0f, area / 2.0f, 1.0f);
+		lightPos[1] = vec4(area / 2.0f, area / 2.0f, -area / 2.0f, 1.0f);
+		lightPos[2] = vec4(-area / 2.0f, area / 2.0f, -area / 2.0f, 1.0f);
+		lightPos[3] = vec4(-area / 2.0f, area / 2.0f, area / 2.0f, 1.0f);
 
-         update scene
+		mat3 normalMatrix = mat3(vec3(camera.getView()[0]), vec3(camera.getView()[1]), vec3(camera.getView()[2]));
+		for (int i = 0; i < 4; i++)
+		{
+			string str = "Spot[" + to_string(i) + "].position";
+			const char *tmpPosition = str.c_str();
+			envProg.setUniform(tmpPosition, camera.getView() * lightPos[i]);
+			str = "Spot[" + to_string(i) + "].direction";
+			const char *tmpDirection = str.c_str();
+			envProg.setUniform(tmpDirection, normalMatrix * (smallCubePosition - vec3(lightPos[i])));
+		}
 
-         render scene*/
-        glClear(GL_COLOR_BUFFER_BIT);
+		envProg.setUniform("Kd", 0.9f, 0.1f, 0.3f);
+		envProg.setUniform("Ks", 0.95f, 0.95f, 0.95f);
+		envProg.setUniform("Ka", 0.4f * 0.3f, 0.5f * 0.3f, 0.3f * 0.3f);
+		envProg.setUniform("Shininess", 100.0f);
 
-        fillShader.use();
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        //glBindVertexArray(vaoHandlers);
-        buffer.use();
-        glDrawElements(GL_TRIANGLES, 18, GL_UNSIGNED_INT, 0);
+		model = mat4(1.0f);
+		model *= translate(smallCubePosition);
+		envSetMatrices();
+		smallCube->render();
 
+		envProg.setUniform("Kd", 0.9f, 0.5f, 0.3f);
+		envProg.setUniform("Ks", 0.95f, 0.95f, 0.95f);
+		envProg.setUniform("Ka", 1.0f,0.0f,0.0f);
+		envProg.setUniform("Shininess", 100.0f);
 
-        lineShader.use();
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        glDrawElements(GL_TRIANGLES, 9, GL_UNSIGNED_INT, 0);
-        glBindVertexArray(0);
-        glfwSwapBuffers(window);
-        glfwPollEvents();
-    }
+		model = mat4(1.0f);
+		envSetMatrices();
+		plane->render();
+		
+		glfwSwapBuffers(window);
+		glfwPollEvents();
+	}
 }
 
-
-
-int main(int argc, char *argv[])
+void keyFunction(GLFWwindow *window, int key, int scanCode, int action, int mods)
 {
+	GLfloat cubeSpeed = 0.2f;
+	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+		glfwSetWindowShouldClose(window, GL_TRUE);
+	camera.setKey(key, action, deltaTime);
 
-    window = initWindow("Triangles", 1000, 800);
+	if (action == GLFW_REPEAT || action == GLFW_PRESS)
+	{
+		switch (key)
+		{
+		case GLFW_KEY_UP:
+			if (smallCubePosition.y < (area / 2.0f) - sArea / 2.0f)
+				smallCubePosition += vec3(0.0f, cubeSpeed, 0.0f);
+			break;
+		case GLFW_KEY_DOWN:
+			if (smallCubePosition.y > -(area / 2.0f) + sArea / 2.0f)
+				smallCubePosition -= vec3(0.0f, cubeSpeed, 0.0f);
+			break;
+		case GLFW_KEY_RIGHT:
+			if (smallCubePosition.x < (area / 2.0f) - sArea / 2.0f)
+				smallCubePosition += vec3(cubeSpeed, 0.0f, 0.0f);
+			break;
+		case GLFW_KEY_LEFT:
+			if (smallCubePosition.x > -(area / 2.0f) + sArea / 2.0f)
+				smallCubePosition -= vec3(cubeSpeed, 0.0f, 0.0f);
+			break;
+		case GLFW_KEY_M:
+			if (smallCubePosition.z < (area / 2.0f) - sArea / 2.0f)
+				smallCubePosition += vec3(0.0f, 0.0f, cubeSpeed);
+			break;
+		case GLFW_KEY_N:
+			if (smallCubePosition.z > -(area / 2.0f) + sArea / 2.0f)
+				smallCubePosition -= vec3(0.0f, 0.0f, cubeSpeed);
+			break;
+		default:
+			break;
+		}
+	}
 
+	glfwPollEvents();
+}
 
-    // Initialization
-    initializeGL();
+void mouse_callback(GLFWwindow* window, double xpos, double ypos)
+{
+	camera.setMouse(xpos, ypos);
+}
 
+int main()
+{
+	window = initWindow("StrandBall", width, height);
 
-    // Enter the main loop
-    mainLoop();
+	init();
+	resize(width, height);
 
-    // Close window and terminate GLFW
-    glfwTerminate();
-    // Exit program
-    exit(EXIT_SUCCESS);
+	glfwSetKeyCallback(window, keyFunction);
+	glfwSetCursorPosCallback(window, mouse_callback);
+
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+	mainloop();
+
+	return 0;
 }

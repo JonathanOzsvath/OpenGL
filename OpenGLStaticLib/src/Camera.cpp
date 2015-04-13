@@ -17,6 +17,37 @@ Camera::Camera(float width, float height, float movingArea)
 	setSpherePosition();
 }
 
+void Camera::setCameraPos(vec3 cameraPos)
+{
+	this->cameraPos = cameraPos;
+}
+
+vec3 Camera::getCameraPos()
+{
+	return cameraPos;
+}
+
+void Camera::setCameraFront(vec3 cameraFront)
+{
+	this->cameraFront = cameraFront-cameraPos;
+	setView();
+}
+
+vec3 Camera::getCameraFront()
+{
+	return cameraFront;
+}
+
+void Camera::setCameraUp(vec3 cameraUp)
+{
+	this->cameraUp = cameraUp;
+}
+
+vec3 Camera::getCameraUp()
+{
+	return cameraUp;
+}
+
 void Camera::setView()
 {
 	view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
@@ -35,7 +66,7 @@ void Camera::do_movement(float deltaTime)
 		if (keys[GLFW_KEY_W])
 		{
 			vec3 tmp = cameraPos + (cameraFront*cameraSpeed);
-			if (abs(tmp.x) < movingArea-5 && abs(tmp.y) < movingArea-5 && abs(tmp.z) < movingArea-5)
+			if (abs(tmp.x) < movingArea-4.0f && abs(tmp.y) < movingArea-4.0f && abs(tmp.z) < movingArea-4.0f)
 			{
 				cameraPos += cameraSpeed * cameraFront;
 				setView();
@@ -45,7 +76,7 @@ void Camera::do_movement(float deltaTime)
 		if (keys[GLFW_KEY_S])
 		{
 			vec3 tmp = cameraPos - (cameraFront*cameraSpeed);
-			if (abs(tmp.x) < movingArea - 5 && abs(tmp.y) < movingArea - 5 && abs(tmp.z) < movingArea - 5)
+			if (abs(tmp.x) < movingArea - 4.0f && abs(tmp.y) < movingArea - 4.0f && abs(tmp.z) < movingArea - 4.0f)
 			{
 				cameraPos -= cameraSpeed * cameraFront;
 				setView();
@@ -55,7 +86,7 @@ void Camera::do_movement(float deltaTime)
 		if (keys[GLFW_KEY_A])
 		{
 			vec3 tmp = cameraPos - (cameraFront*cameraSpeed);
-			if (abs(tmp.x) < movingArea - 5 && abs(tmp.y) < movingArea - 5 && abs(tmp.z) < movingArea - 5)
+			if (abs(tmp.x) < movingArea - 4.0f && abs(tmp.y) < movingArea - 4.0f && abs(tmp.z) < movingArea - 4.0f)
 			{
 				cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
 				setView();
@@ -65,7 +96,7 @@ void Camera::do_movement(float deltaTime)
 		if (keys[GLFW_KEY_D])
 		{
 			vec3 tmp = cameraPos + (cameraFront*cameraSpeed);
-			if (abs(tmp.x) < movingArea - 5 && abs(tmp.y) < movingArea - 5 && abs(tmp.z) < movingArea - 5)
+			if (abs(tmp.x) < movingArea - 4.0f && abs(tmp.y) < movingArea - 4.0f && abs(tmp.z) < movingArea - 4.0f)
 			{
 				cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
 				setView();
@@ -86,7 +117,7 @@ void Camera::setKey(int key, int action, float deltaTime)
 			tmpCameraPos = cameraPos;
 			tmpCameraFront = cameraFront;
 			tmpCameraUp = cameraUp;
-			cameraPos = vec3(movingArea, movingArea, movingArea);
+			cameraPos = vec3(movingArea-1, movingArea-1, movingArea-1);
 			cameraFront = vec3(0.0f - cameraPos.x, 0.0f - cameraPos.y, 0.0f - cameraPos.z);
 			cameraUp = vec3(0.0f, 1.0f, 0.0f);
 			setView();
