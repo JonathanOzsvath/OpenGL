@@ -30,7 +30,7 @@ GLfloat lastFrame = 0.0f;
 Camera camera(width, height, 25.0f);
 Cube *cube;
 VBOSphere *sphere,*sphere2;
-Texture *texture, *texture2;
+Texture *texture, *texture2, *texture3, *texture4;
 
 void compileShader()
 {
@@ -97,12 +97,15 @@ void init()
 
 	CubeMapTexture cubetexture("src/texture/citadella/night", 2048);
 	//CubeMapTexture cubeTexture("src/texture/cubemap_night/night", 256);
+	//CubeMapTexture cubetexture("src/texture/brick/brick", 1024);
 
 	sphereProg.use();
-	sphereProg.setUniform("Light.Intensity", vec3(1.0f, 1.0f, 1.0f));
+	sphereProg.setUniform("Light.Intensity", vec3(0.7f, 0.7f, 0.7f));
 
-	texture = new Texture("src/texture/flower.tga", 0);
-	texture2 = new Texture("src/texture/brick1.tga", 1);
+	texture = new Texture("src/texture/eltrusko.tga", 0);
+	texture2 = new Texture("src/texture/jabulani.tga", 1);
+	texture3 = new Texture("src/texture/Teamgeist.tga", 2);
+	texture4 = new Texture("src/texture/europass.tga", 2);
 }
 
 void mainloop()
@@ -121,7 +124,7 @@ void mainloop()
 
 		envProg.use();
 		envSetMatrices();
-		envProg.setUniform("WorldCameraPosition", camera.getView());
+		envProg.setUniform("WorldCameraPosition", vec3(50.0f,50.0f,50.0f));
 		envProg.setUniform("DrawSkyBox", true);
 		cube->render();
 
@@ -129,22 +132,32 @@ void mainloop()
 		sphereProg.use();
 		sphereSetMatrices();
 
-		sphereProg.setUniform("Light.Position", vec4(0.0f, 20.0f, 0.0f, 1.0f));
+		sphereProg.setUniform("Light.Position", vec4(10.0f, 10.0f, 10.0f, 0.5f));
 		sphereProg.setUniform("Material.Kd", 0.9f, 0.9f, 0.9f);
 		sphereProg.setUniform("Material.Ks", 0.95f, 0.95f, 0.95f);
 		sphereProg.setUniform("Material.Ka", 0.1f, 0.1f, 0.1f);
-		sphereProg.setUniform("Material.Shininess", 100.0f);
+		sphereProg.setUniform("Material.Shininess", 50.0f);
 
 		
 		glBindTexture(GL_TEXTURE_2D, texture->id);
-
 		sphere->render();
 
 		model = mat4(1.0);
 		model *= translate(vec3(10.0f, 0.0f, 10.0f));
 		sphereSetMatrices();
 		glBindTexture(GL_TEXTURE_2D, texture2->id);
+		sphere2->render();
 
+		model = mat4(1.0);
+		model *= translate(vec3(0.0f, 5.0f, 10.0f));
+		sphereSetMatrices();
+		glBindTexture(GL_TEXTURE_2D, texture3->id);
+		sphere2->render();
+
+		model = mat4(1.0);
+		model *= translate(vec3(0.0f, 15.0f, 10.0f));
+		sphereSetMatrices();
+		glBindTexture(GL_TEXTURE_2D, texture4->id);
 		sphere2->render();
 
 		glfwSwapBuffers(window);

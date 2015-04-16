@@ -43,7 +43,7 @@ void GLProgram::setProgramID(GLuint pid)
     program_id = pid;
 }
 
-GLuint GLProgram::getProgramID()
+int GLProgram::getProgramID()
 {
     return program_id;
 }

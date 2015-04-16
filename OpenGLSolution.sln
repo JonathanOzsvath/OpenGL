@@ -7,8 +7,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OpenGLStaticLib", "OpenGLSt
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OpenGLProject", "OpenGLProject\OpenGLProject.vcxproj", "{4E8FA70E-BFC3-4E60-8784-0181AED074FE}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Negyedik_gyakorlat", "Negyedik_gyakorlat\Negyedik_gyakorlat.vcxproj", "{6EBD8F5C-08D7-468E-9177-14A8E3377740}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SphereWithPlane", "SphereWithPlane\SphereWithPlane.vcxproj", "{923ACEE4-36DF-49FE-B708-178CA276DBD4}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RandomSphare", "RandomSphare\RandomSphare.vcxproj", "{F5035546-0783-49EC-B9DF-7051A8605B72}"
@@ -43,12 +41,6 @@ Global
 		{4E8FA70E-BFC3-4E60-8784-0181AED074FE}.Release|Win32.Build.0 = Release|Win32
 		{4E8FA70E-BFC3-4E60-8784-0181AED074FE}.Release|x64.ActiveCfg = Release|x64
 		{4E8FA70E-BFC3-4E60-8784-0181AED074FE}.Release|x64.Build.0 = Release|x64
-		{6EBD8F5C-08D7-468E-9177-14A8E3377740}.Debug|Win32.ActiveCfg = Debug|Win32
-		{6EBD8F5C-08D7-468E-9177-14A8E3377740}.Debug|Win32.Build.0 = Debug|Win32
-		{6EBD8F5C-08D7-468E-9177-14A8E3377740}.Debug|x64.ActiveCfg = Debug|Win32
-		{6EBD8F5C-08D7-468E-9177-14A8E3377740}.Release|Win32.ActiveCfg = Release|Win32
-		{6EBD8F5C-08D7-468E-9177-14A8E3377740}.Release|Win32.Build.0 = Release|Win32
-		{6EBD8F5C-08D7-468E-9177-14A8E3377740}.Release|x64.ActiveCfg = Release|Win32
 		{923ACEE4-36DF-49FE-B708-178CA276DBD4}.Debug|Win32.ActiveCfg = Debug|Win32
 		{923ACEE4-36DF-49FE-B708-178CA276DBD4}.Debug|Win32.Build.0 = Debug|Win32
 		{923ACEE4-36DF-49FE-B708-178CA276DBD4}.Debug|x64.ActiveCfg = Debug|x64

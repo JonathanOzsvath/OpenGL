@@ -20,7 +20,6 @@ using namespace std;
 
 GLFWwindow *window;
 GLProgram envProg;
-GLProgram sphereProg;
 GLuint width = 1920, height = 1080;
 
 vec4 worldLight = vec4(0.0f, 0.0f, 5.0f, 1.0f);
@@ -143,6 +142,8 @@ void mainloop()
 		model = mat4(1.0f);
 		model *= translate(smallCubePosition);
 		envSetMatrices();
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, smallCubeTexture->id);
 		smallCube->render();
 
 		envProg.setUniform("Kd", 0.9f, 0.5f, 0.3f);

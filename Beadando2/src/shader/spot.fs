@@ -6,6 +6,9 @@ in vec2 TexCoord;
 
 layout(binding=0) uniform sampler2D Tex1;
 
+uniform vec4 LightPosition;
+uniform vec3 LightIntensity;
+
 struct SpotLightInfo {
     vec4 position;   // Position in eye coords
     vec3 intensity;
@@ -46,6 +49,19 @@ vec3 adsWithSpotlight( int spotIndex)
     }
 }
 
+vec3 ads( )
+{
+    vec3 s = normalize( vec3(LightPosition) - Position );
+    vec3 v = normalize(vec3(-Position));
+    vec3 r = reflect( -s, Normal );
+
+    return
+        LightIntensity * ( Ka +
+          Kd * max( dot(s, Normal), 0.0 ) +
+          Ks * pow( max( dot(r,v), 0.0 ), Shininess ) );
+}
+
+
 void main() {
     vec3 Color = vec3(0.0);
     vec4 texColor = texture( Tex1, TexCoord );
@@ -54,5 +70,5 @@ void main() {
     {
         Color += adsWithSpotlight(i);
     }
-    FragColor = vec4(Color, 1.0)*texColor;
+    FragColor = (vec4(Color, 1.0) + vec4(ads(),1.0)) * texColor;
 }

@@ -23,7 +23,7 @@ public:
     void link();
     void use();
     void setProgramID(GLuint);
-    GLuint getProgramID();
+    int getProgramID();
     void setShaders(std::vector<GLuint>);
     void setShaders(GLuint[]);
     //void setShaders(std::vector<GLShader>);
