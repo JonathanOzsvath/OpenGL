@@ -1,151 +1,150 @@
-#include <iostream>
-#include "GLFWProgram.h"
-#include "GLProgram.h"
 #include "GLShader.h"
-#include "vbocube.h"
+#include "GLBuffer.h"
+#include "GLProgram.h"
+#include "GLFWProgram.h"
 #include "vbosphere.h"
-#include "vboteapot.h"
+#include "vbocube.h"
 #include "vboplane.h"
-#include "vbotorus.h"
-#include "vbomesh.h"
-#include <glm/gtx/transform.hpp>
+#include "Cube.h"
+#include "CubeMapTexture.h"
+#include "Texture.h"
+#include "Camera.h"
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm\gtx\transform.hpp>
+#include <glm\gtx\rotate_vector.hpp>
+#include "tgaio.h"
 
-using namespace std;
 using namespace glm;
+using namespace std;
 
 GLFWwindow *window;
-GLuint width = 1280, height = 720;
+GLProgram prog;
+GLuint width = 1920, height = 1080;
+
+vec4 worldLight = vec4(0.0f, 0.0f, 0.0f, 1.0f);
+
+mat4 model;
+mat4 projection;
+
+GLfloat deltaTime = 0.0f;
+GLfloat lastFrame = 0.0f;
+Camera camera(width, height, 25.0f);
+
 VBOCube *cube;
 VBOPlane *plane;
-VBOSphere *sphere;
-VBOTeapot *teapot;
-VBOTorus *torus;
-VBOMesh *mesh;
-GLProgram program;
-GLProgram program2;
 
-glm::mat4 lookat;
-glm::mat4 projection;
-glm::mat4 model;
-glm::mat4 model2;
+int vetit;
 
-glm::vec4 worldLight;
-GLfloat phi, theta, r = 3.0;
-glm::vec3 moving(r*sinf(radians(phi))*cosf(radians(theta)), r*sinf(radians(phi))*sinf(radians(theta)), r*cosf(radians(phi)));
-
-
-void init()
+void compileShader()
 {
-	glClearColor(1.0, 1.0, 1.0, 1.0);
-	//glEnable(GL_CULL_FACE);
-	glEnable(GL_DEPTH_TEST);
-	
-	glm::mat4 tmp(1.0);
-	cube = new VBOCube();
-	plane = new VBOPlane(8.0f, 8.0f, 1, 1);
-	sphere = new VBOSphere(0.5f, 360, 360);
-	teapot = new VBOTeapot(3, tmp);
-	torus = new VBOTorus(0.8f, 0.4f, 100, 100);
-	//mesh = new VBOMesh("src/untitled.obj");
-
 	GLShader vert(GLShader::GLShaderType::VERTEX);
-	vert.readShader("src/shader/diffuse.vert");
+	vert.readShader("src/shader/spot.vs");
 	vert.compileShader();
 
 	GLShader frag(GLShader::GLShaderType::FRAGMENT);
-	frag.readShader("src/shader/diffuse.frag");
+	frag.readShader("src/shader/spot.fs");
 	frag.compileShader();
 
-	program.setShaders({ vert.getId(), frag.getId()});
-	program.link();
+	prog.setShaders({ vert.getId(), frag.getId() });
+	prog.link();
 
-	GLShader vert2(GLShader::GLShaderType::VERTEX);
-	vert2.readShader("src/shader/phong.vert");
-	vert2.compileShader();
+}
 
-	GLShader frag2(GLShader::GLShaderType::FRAGMENT);
-	frag2.readShader("src/shader/phong.frag");
-	frag2.compileShader();
+void setMatrices()
+{
+	mat4 mv = camera.getView() * model;
+	prog.setUniform("ModelViewMatrix", mv);
+	prog.setUniform("ModelMatrix", model);
+	prog.setUniform("NormalMatrix", mat3(vec3(mv[0]), vec3(mv[1]), vec3(mv[2])));
+	prog.setUniform("MVP", projection * mv);
+}
 
-	program2.setShaders({ vert2.getId(), frag2.getId() });
-	program2.link();
+void resize(int w, int h)
+{
+	glViewport(0, 0, w, h);
+	width = w;
+	height = h;
+	projection = glm::perspective(glm::radians(60.0f), (float)w / h, 0.01f, 300.0f);
+}
 
-	lookat= glm::lookAt(moving, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-	worldLight = glm::vec4(5.0, 1.0, 10.0, 1.0);
-	program.setUniform("LightPosition", lookat * worldLight);
-	program2.setUniform("LightPosition", lookat * worldLight);
+void init()
+{
+	compileShader();
+	glClearColor(0.0f, 1.0f, 0.5f, 1.0f);
+	glEnable(GL_DEPTH_TEST);
 
-	glViewport(0, 0, width, height);
-	//perspective(látószög,képarány,legözelebbi pont amit látunk,legtávolabbi pont amit látunk
-	projection = glm::perspective(glm::radians(50.0f), (float)width / height, 0.3f, 100.0f);
-	//a modellen végzett transzformációk
+	prog.use();
+	cube = new VBOCube();
+	plane = new VBOPlane(30.0f, 30.0f, 1, 1);
 
-	
+	prog.setUniform("Spot.intensity", vec3(1.0f, 1.0f, 1.0f));
+	prog.setUniform("Spot.exponent", 30.0f);
+	prog.setUniform("Spot.alfa", 5.0f);
+	prog.setUniform("Spot.beta", 5.0f);
 
-	model = glm::mat4(1.0f);
-	model *= glm::translate(glm::vec3(0.8f, 0.0f,-1.0f));
-	model2 = glm::mat4(1.0f);
-	model2 *= glm::translate(glm::vec3(0.0f, 0.0f,-0.8f));
-	model2 *= glm::rotate(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+	prog.setUniform("LightIntensity", vec3(0.1f, 0.1f, 0.1f));
+
+	/*vetítés init*/
+	vec3 projPos = vec3(0.0f, 10.0f, 0.0f);
+	vec3 projAt = vec3(0.0f, 0.0f, 0.0f);
+	vec3 projUp = vec3(1.0f, 0.0f, 0.0f);
+	mat4 projView = glm::lookAt(projPos, projAt, projUp);
+	mat4 projProj = glm::perspective(glm::radians(30.0f), 1.0f, 0.2f, 1000.0f);
+	mat4 projScaleTrans = glm::translate(vec3(0.5f)) * glm::scale(vec3(0.5f));
+	prog.setUniform("ProjectorMatrix", projScaleTrans * projProj * projView);
+
+	// Load texture file
+	glActiveTexture(GL_TEXTURE0);
+	//valtas = 0;
+	string kepek = "src/texture/mese/Vuk_1.tga";
+	const char* tmp = kepek.c_str();
+	vetit = TGAIO::loadTex(tmp);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 }
 
 void mainloop()
 {
 	while (!glfwWindowShouldClose(window) && !glfwGetKey(window, GLFW_KEY_ESCAPE))
 	{
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		GLfloat currentFrame = glfwGetTime();
+		deltaTime = currentFrame - lastFrame;
+		lastFrame = currentFrame;
+		camera.do_movement(deltaTime);
 
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		program.use();
-		glm::mat4 mv = lookat * model;
-		program.setUniform("ModelViewMatrix", mv);
+		prog.use();
 
-		glm::mat3 normalMatrix = glm::mat3(glm::vec3(mv[0]), glm::vec3(mv[1]), glm::vec3(mv[2]));
-		program.setUniform("NormalMatrix", normalMatrix);
+		prog.setUniform("LightPosition", vec4(10.0f)* camera.getView());
 
-		glm::mat4 mvp = projection * lookat * model;
-		program.setUniform("MVP", mvp);
+		float area = 50.0f;
+		vec4 lightPos = vec4(0.0f,5.0f,0.0f, 1.0f);
+		prog.setUniform("Spot.position", camera.getView() * lightPos);
+		mat3 normalMatrix = mat3(vec3(camera.getView()[0]), vec3(camera.getView()[1]), vec3(camera.getView()[2]));
+		prog.setUniform("Spot.direction", normalMatrix * vec3(-lightPos));
+		prog.setUniform("Spot.Up", vec3(1.0f, 0.0f, 0.0f));
 
-		glm::vec3 ld = glm::vec3(1.0f, 1.0f, 1.0f);
-		glm::vec3 kd = glm::vec3(1.0f, 1.0f, 0.0f);
-		program.setUniform("Ld", ld);
-		program.setUniform("Kd", kd);
+		prog.setUniform("Kd", 0.9f, 0.5f, 0.3f);
+		prog.setUniform("Ks", 0.95f, 0.95f, 0.95f);
+		prog.setUniform("Ka", 0.9f * 0.3f, 0.5f * 0.3f, 0.3f * 0.3f);
+		prog.setUniform("Shininess", 100.0f);
 
-		//cube->render();
-		//plane->render();
-		sphere->render();
-		//torus->render();
-		//teapot->render();
-		//mesh->render();
+		model = mat4(1.0f);
+		model *= glm::translate(vec3(0.0f, 1.0f, 0.0f));
+		model *= glm::rotate(glm::radians(45.0f), vec3(0.0f, 1.0f, 0.0f));
+		model *= glm::rotate(glm::radians(-90.0f), vec3(1.0f, 0.0f, 0.0f));
+		setMatrices();
+		cube->render();
 
-		program2.use();
+		prog.setUniform("Kd", 0.7f, 0.7f, 0.7f);
+		prog.setUniform("Ks", 0.9f, 0.9f, 0.9f);
+		prog.setUniform("Ka", 0.2f, 0.2f, 0.2f);
+		prog.setUniform("Shininess", 100.0f);
 
-		program2.setUniform("Material.Kd", vec3(0.0f, 1.0f, 0.0f));
-		program2.setUniform("Light.Ld", vec3(1.0f, 1.0f, 1.0f));
-		program2.setUniform("Material.Ka", lookat * worldLight);
-		program2.setUniform("Light.La", vec3(1.0f, 1.0f, 0.0f));
-		program2.setUniform("Material.Ks", vec3(0.8f, 0.8f, 0.8f));
-		program2.setUniform("Light.Ls", vec3(1.0f, 1.0f, 1.0f));
-		program2.setUniform("Material.Shininess", 100.0f);
-
-
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		glm::mat4 mv2 = lookat * model2;
-		program2.setUniform("ModelViewMatrix", mv2);
-
-		//glm::mat3 normalMatrix2 = glm::mat3(glm::vec3(mv[0]), glm::vec3(mv[1]), glm::vec3(mv[2]));
-		program2.setUniform("NormalMatrix", normalMatrix);
-
-		glm::mat4 mvp2 = projection * lookat * model2;
-		program2.setUniform("MVP", mvp2);
-
-		glm::vec3 ld2 = glm::vec3(1.0f, 1.0f, 1.0f);
-		glm::vec3 kd2 = glm::vec3(1.0f, 0.0f, 0.0f);
-		program2.setUniform("Ld", ld2);
-		program2.setUniform("Kd", kd2);
-
-		
-		torus->render();
+		model = mat4(1.0f);
+		setMatrices();
+		plane->render();
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
@@ -154,82 +153,29 @@ void mainloop()
 
 void keyFunction(GLFWwindow *window, int key, int scanCode, int action, int mods)
 {
-	if (action == GLFW_REPEAT || action == GLFW_PRESS)
-	{
-		switch (key)
-		{
-		case GLFW_KEY_RIGHT:
-			phi+=0.5;
-			moving = vec3(r*sinf(radians(phi))*cosf(radians(theta)), r*sinf(radians(phi))*sinf(radians(theta)), r*cosf(radians(phi)));
-			cout << "phi: " << phi << endl;
-			break;
-		case GLFW_KEY_LEFT:
-			phi-=0.5;
-			moving = vec3(r*sinf(radians(phi))*cosf(radians(theta)), r*sinf(radians(phi))*sinf(radians(theta)), r*cosf(radians(phi)));
-			cout << "phi: " << phi << endl;
-			break;
-		case GLFW_KEY_UP:
-			theta+=0.5;
-			moving = vec3(r*sinf(radians(phi))*cosf(radians(theta)), r*sinf(radians(phi))*sinf(radians(theta)), r*cosf(radians(phi)));
-			cout << "theta: " << theta << endl;
-			break;
-		case GLFW_KEY_DOWN:
-			theta-=0.5;
-			moving = vec3(r*sinf(radians(phi))*cosf(radians(theta)), r*sinf(radians(phi))*sinf(radians(theta)), r*cosf(radians(phi)));
-			cout << "theta: " << theta << endl;
-			break;
-		case GLFW_KEY_D:
-			moving.x += 1;
-			cout << "x: " << moving.x<<endl;
-			break;
-		case GLFW_KEY_A:
-			moving.x -= 1;
-			cout << "x: " << moving.x << endl;
-			break;
-		case GLFW_KEY_W:
-			moving.y += 1;
-			cout << "y: " << moving.y << endl;
-			break;
-		case GLFW_KEY_S:
-			moving.y -= 1;
-			cout << "y: " << moving.y << endl;
-			break;
-		case GLFW_KEY_PERIOD:
-			moving.z += 1;
-			cout << "z: " << moving.z << endl;
-			break;
-		case GLFW_KEY_COMMA:
-			moving.z -= 1;
-			cout << "z: " << moving.z << endl;
-			break;
-		case GLFW_KEY_R:
-			r += 0.1;
-			moving = vec3(r*sinf(radians(phi))*cosf(radians(theta)), r*sinf(radians(phi))*sinf(radians(theta)), r*cosf(radians(phi)));
-			cout << "r: " << r << endl;
-			break;
-		case GLFW_KEY_T:
-			r -= 0.1;
-			moving = vec3(r*sinf(radians(phi))*cosf(radians(theta)), r*sinf(radians(phi))*sinf(radians(theta)), r*cosf(radians(phi)));
-			cout << "r: " << r << endl;
-			break;
-		default:
-			printf("Bad key :(\n");
-			break;
-		}
+	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+		glfwSetWindowShouldClose(window, GL_TRUE);
+	camera.setKey(key, action, deltaTime);
 
-		lookat = glm::lookAt(moving, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+	glfwPollEvents();
+}
 
-		glfwPollEvents();
-	}
+void mouse_callback(GLFWwindow* window, double xpos, double ypos)
+{
+	camera.setMouse(xpos, ypos);
 }
 
 int main()
 {
-	window = initWindow("Pityunal", width, height);
+	window = initWindow("negyzetes Spotlight", width, height);
 
 	init();
+	resize(width, height);
 
 	glfwSetKeyCallback(window, keyFunction);
+	glfwSetCursorPosCallback(window, mouse_callback);
+
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	mainloop();
 
