@@ -10,6 +10,8 @@ layout(binding=0) uniform sampler2D Tex1;
 layout(binding=1) uniform sampler2D ProjectorTex;
 layout(binding=2) uniform sampler2DShadow ShadowMap;
 
+uniform bool texOff;
+
 struct LightInfo 
 {
     vec3 Intensity;
@@ -134,15 +136,17 @@ void shadeWithShadow()
     if(ProjTexCoord.z > 0.0)
     {
         projTexColor = textureProj( ProjectorTex, ProjTexCoord );
-        //FragColor = (vec4(spotLight,1.0) * shadow) * color;
         negyzetSpotLight(amb, diffSpec);
     }
     else
     {
-        //FragColor =  vec4(phong, 1.0) * color;
         closestDepth = 1.0f;
     }
 
+    if(texOff)
+    {
+        color = vec4(1.0);
+    }
     vec3 allAmbient = amb + amb1;
     vec3 allDiff = diffSpec + (diff);
     FragColor = vec4((allAmbient + closestDepth * allDiff), 1.0f) * color 

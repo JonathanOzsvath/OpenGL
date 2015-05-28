@@ -3,10 +3,8 @@
 #include "GLProgram.h"
 #include "GLFWProgram.h"
 #include "vbosphere.h"
-#include "vbocube.h"
+#include "vbomesh.h"
 #include "vboplane.h"
-#include "Cube.h"
-#include "CubeMapTexture.h"
 #include "Texture.h"
 #include "Camera.h"
 #include <glm/glm.hpp>
@@ -38,19 +36,23 @@ GLfloat lastFrame = 0.0f;
 Camera camera(width, height, 25.0f);
 
 /*modell változók*/
-VBOCube *cube;
-VBOPlane *plane;
+VBOMesh *nyul;
+VBOPlane *padlo, *fal1, *fal2, *vaszon;
+VBOMesh *asztal, *computer, *sofa, *cupboard, *szek, *vetito;
 
 /*vetítési változók*/
 mat4 projProj;
 mat4 projView;
 vec3 projPos;
 vec3 projAt;
+vec3 projUp;
 mat4 projScaleTrans;
 int vetit;
+vector<GLuint> kepek;
+int valt;
 
 //mozgatható model változó
-vec3 smallCubePosition;
+vec3 nyulPosition;
 
 //shadow változók
 int shadowMapWidth = 1024;
@@ -64,7 +66,7 @@ Frustum * lightFrustum;
 mat4 lightPV;
 
 //Texture
-GLuint fal, vetito;
+GLuint padloTexture, fal;
 
 void compileShader()
 {
@@ -99,6 +101,28 @@ void resize(int w, int h)
 	width = w;
 	height = h;
 	projection = glm::perspective(glm::radians(60.0f), (float)w / h, 0.1f, 300.0f);
+}
+
+void diaLoader()
+{
+	valt = 0;
+	glActiveTexture(GL_TEXTURE1);
+	for (int i = 1; i <= 5; i++)
+	{
+		GLuint tmp;
+		glGenTextures(1, &tmp);
+		string tmp2 = "src/texture/mese/Vuk_" + to_string(i) + ".tga";
+		const char* tmp3 = tmp2.c_str();
+		tmp = TGAIO::loadTex(tmp3);
+		kepek.push_back(tmp);
+		glBindTexture(GL_TEXTURE_2D, tmp);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	}
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, kepek[valt]);
 }
 
 void setupFBO()
@@ -143,7 +167,7 @@ void setupFBO()
 
 void drawScene()
 {
-	prog.setUniform("Light.Position", vec4(0.0f,15.0f,0.0f,1.0f) * camera.getView());
+	prog.setUniform("Light.Position", vec4(0.0f,0.0f,0.0f,1.0f) * camera.getView());
 
 	//projektor homogén koordinátái
 	vec4 lightP = vec4(projPos, 1.0f);
@@ -169,12 +193,39 @@ void drawScene()
 	prog.setUniform("Material.Ka", 0.9f * 0.3f, 0.5f * 0.3f, 0.3f * 0.3f);
 	prog.setUniform("Material.Shininess", 100.0f);
 
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, vetito);
+	prog.setUniform("texOff", true);
 	model = mat4(1.0f);
-	model *= glm::translate(smallCubePosition);
+	model *= scale(vec3(0.6f));
+	model *= glm::translate(nyulPosition);
 	setMatrices();
-	cube->render();
+	nyul->render();
+
+	model = mat4(1.0f);
+	model *= scale(vec3(0.61f));
+	model *= glm::translate(nyulPosition);
+	setMatrices();
+	nyul->render();
+
+	prog.setUniform("texOff", false);
+
+	prog.setUniform("Material.Kd", 0.7f, 0.7f, 0.7f);
+	prog.setUniform("Material.Ks", 0.9f, 0.9f, 0.9f);
+	prog.setUniform("Material.Ka", 0.2f, 0.2f, 0.2f);
+	prog.setUniform("Material.Shininess", 100.0f);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, padloTexture);
+	model = mat4(1.0f);
+	model *= translate(vec3(0.0f, -10.0f, 0.0f));
+	setMatrices();
+	padlo->render();
+
+	prog.setUniform("texOff", true);
+	model = mat4(1.0f);
+	model *= translate(vec3(0.0f, 10.0f, 0.0f));
+	setMatrices();
+	padlo->render();
+	prog.setUniform("texOff", false);
 
 	prog.setUniform("Material.Kd", 0.7f, 0.7f, 0.7f);
 	prog.setUniform("Material.Ks", 0.9f, 0.9f, 0.9f);
@@ -184,11 +235,84 @@ void drawScene()
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, fal);
 	model = mat4(1.0f);
+	model *= translate(vec3(0.0f, 0.0f, 15.0f));
+	model *= rotate(radians(90.0f), vec3(1.0f, 0.0f, 0.0f));
+	setMatrices();
+	fal1->render();
+
+	model = mat4(1.0f);
 	model *= translate(vec3(0.0f, 0.0f, -15.0f));
 	model *= rotate(radians(90.0f), vec3(1.0f, 0.0f, 0.0f));
 	setMatrices();
-	plane->render();
+	fal1->render();
 
+	model = mat4(1.0f);
+	model *= translate(vec3(20.0f, 0.0f, 0.0f));
+	model *= rotate(radians(90.0f), vec3(0.0f, 0.0f, 1.0f));
+	setMatrices();
+	fal2->render();
+
+	model = mat4(1.0f);
+	model *= translate(vec3(-20.0f, 0.0f, 0.0f));
+	model *= rotate(radians(90.0f), vec3(0.0f, 0.0f, 1.0f));
+	setMatrices();
+	fal2->render();
+
+	prog.setUniform("Material.Kd", 1.0f, 1.0f, 1.0f);
+	prog.setUniform("Material.Ks", 1.0f, 1.0f, 1.0f);
+	prog.setUniform("Material.Ka", 1.0f, 1.0f, 1.0f);
+	prog.setUniform("Material.Shininess", 50.0f);
+
+	prog.setUniform("texOff", true);
+	model = mat4(1.0f);
+	model *= scale(vec3(1.6f));
+	model *= translate(vec3(-11.3f, -6.25f, -3.9f));
+	setMatrices();
+	asztal->render();
+
+	prog.setUniform("Material.Ka", vec3(0.3f, 0.5f, 0.8f));
+	prog.setUniform("Material.Kd", vec3(0.7f, 0.5f, 0.0f));
+	prog.setUniform("Material.Ks", vec3(1.0f, 1.0f, 1.0f));
+	model = mat4(1.0f);
+	model *= translate(vec3(-11.5f, -6.95f, -13.9f));
+	model *= scale(vec3(0.7f));
+	setMatrices();
+	computer->render();
+
+	prog.setUniform("Material.Ka", vec3(0.56f, 0.32f, 0.25f));
+	prog.setUniform("Material.Kd", vec3(0.56f, 0.32f, 0.25f));
+	prog.setUniform("Material.Ks", vec3(0.7f, 0.5f, 0.03f));
+	model = mat4(1.0f);
+	model *= translate(vec3(17.3f, -10.25f, -0.9f));
+	model *= rotate(radians(-90.0f), vec3(0.0f, 1.0f, 0.0f));
+	model *= scale(vec3(2.5f));
+	setMatrices();
+	sofa->render();
+
+	model = mat4(1.0f);
+	model *= translate(vec3(0.8f, -10.25f, 12.9f));
+	model *= rotate(radians(90.0f), vec3(0.0f, 1.0f, 0.0f));
+	model *= scale(vec3(2.5f));
+	setMatrices();
+	cupboard->render();
+
+	prog.setUniform("Material.Ka", vec3(0.2f, 0.2f, 0.25f));
+	prog.setUniform("Material.Kd", vec3(0.3f, 0.4f, 0.3f));
+	prog.setUniform("Material.Ks", vec3(0.2f, 0.5f, 0.03f));
+	model = mat4(1.0f);
+	model *= translate(vec3(-11.3f, -10.0f, -3.9f));
+	model *= scale(vec3(0.5f));
+	setMatrices();
+	szek->render();
+
+	model = mat4(1.0f);
+	model *= translate(projPos);
+	model *= rotate(radians(90.0f), vec3(0.0f, 1.0f, 0.0f));
+	model *= scale(vec3(0.5f));
+	setMatrices();
+	vetito->render();
+
+	prog.setUniform("texOff", false);
 }
 
 void init()
@@ -198,49 +322,43 @@ void init()
 	glEnable(GL_DEPTH_TEST);
 	glViewport(0, 0, width, height);
 
-	cube = new VBOCube();
-	plane = new VBOPlane(30.0f, 30.0f, 1, 1);
+	nyul = new VBOMesh("src/bunny.obj");
+	padlo = new VBOPlane(40.0f, 30.0f, 1, 1);
+	fal1 = new VBOPlane(40.0f, 20.0f, 1, 1);
+	fal2 = new VBOPlane(20.0f, 30.0f, 1, 1);
+	asztal = new VBOMesh("src/desk.obj");
+	computer = new VBOMesh("src/computer.obj");
+	sofa = new VBOMesh("src/sofa.obj");
+	cupboard = new VBOMesh("src/cupboard.obj");
+	szek = new VBOMesh("src/szek.obj");
+	vetito = new VBOMesh("src/vetito.obj");
 
-	smallCubePosition = vec3(0.0f, 0.0f, 0.0f);
+	nyulPosition = vec3(0.0f, 0.0f, 0.0f);
 
 	projection1 = mat4(1.0f);
 	projection1 = glm::perspective(glm::radians(50.0f),
 		static_cast<float>(width) / static_cast <float> (height), 0.1f, 300.0f);
 
+	//padló texture
+	glActiveTexture(GL_TEXTURE0);
+	glGenTextures(1, &padloTexture);
+	padloTexture = TGAIO::loadTex("src/texture/floor.tga");
+	glBindTexture(GL_TEXTURE_2D, padloTexture);
+
 	//fal texture
 	glActiveTexture(GL_TEXTURE0);
 	glGenTextures(1, &fal);
-	fal = TGAIO::loadTex("src/texture/desk.tga");
+	fal = TGAIO::loadTex("src/texture/fal.tga");
 	glBindTexture(GL_TEXTURE_2D, fal);
 
-	//vetítõ textura
-	glActiveTexture(GL_TEXTURE0);
-	glGenTextures(1, &vetito);
-	vetito = TGAIO::loadTex("src/texture/flower.tga");
-	glBindTexture(GL_TEXTURE_2D, vetito);
-
-	// Load texture file
-	glActiveTexture(GL_TEXTURE1);
-	//valtas = 0;
-	string kepek = "src/texture/mese/Vuk_1.tga";
-	const char* tmp = kepek.c_str();
-	vetit = TGAIO::loadTex(tmp);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	diaLoader();
 
 	/*vetítés init*/
 	projPos = vec3(0.0f, 0.0f, 0.0f);
 	projAt = vec3(0.0f, 0.0f, -15.0f);
-	vec3 projUp = vec3(0.0f, 1.0f, 0.0f);
-	projView = glm::lookAt(projPos, projAt, projUp);
-	projProj = glm::perspective(30.0f, 1.0f, 0.2f, 1000.0f);
-
-	projScaleTrans = glm::translate(vec3(0.5f)) * glm::scale(vec3(2.0f));
-	mat4 m = projScaleTrans * projProj * projView;
-	// Set the uniform variable
-	prog.setUniform("ProjectorMatrix", m);
+	projUp = vec3(0.0f, -1.0f, 0.0f);
+	
+	lightFrustum = new Frustum(Projection::PERSPECTIVE);
 
 	// Set up the framebuffer object
 	setupFBO();
@@ -255,22 +373,18 @@ void init()
 		vec4(0.5f, 0.5f, 0.5f, 1.0f)
 		);
 
-	lightFrustum = new Frustum(Projection::PERSPECTIVE);
-	vec3 lightPos = projPos;  // World coords
-	lightFrustum->orient(lightPos, projAt, vec3(0.0f, -1.0f, 0.0f));
-	lightFrustum->setPerspective(24.2f, 1.0f, 1.0f, 50.0f);
-	lightPV = shadowBias * lightFrustum->getProjectionMatrix() * lightFrustum->getViewMatrix();
+	
 
 	glActiveTexture(GL_TEXTURE2);
 	prog.setUniform("ShadowMap", depthTex);
 
 	//világítás init
 	prog.setUniform("Spot.Intensity", vec3(0.5f));
-	prog.setUniform("Spot.exponent", 5.0f);
-	prog.setUniform("Spot.alfa", 5.0f);
-	prog.setUniform("Spot.beta", 5.0f);
+	prog.setUniform("Spot.exponent", 25.0f);
+	prog.setUniform("Spot.alfa", 18.0f);
+	prog.setUniform("Spot.beta", 14.0f);
 
-	prog.setUniform("Light.Intensity", vec3(0.5f));
+	prog.setUniform("Light.Intensity", vec3(0.7f));
 }
 
 void mainloop()
@@ -282,6 +396,23 @@ void mainloop()
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
 		camera.do_movement(deltaTime);
+
+		projView = glm::lookAt(projPos, projAt, projUp);
+		projProj = glm::perspective(30.0f, 1.0f, 0.2f, 1000.0f);
+
+		projScaleTrans = glm::translate(vec3(0.5f)) * glm::scale(vec3(2.0f));
+		mat4 m = projScaleTrans * projProj * projView;
+		// Set the uniform variable
+		prog.setUniform("ProjectorMatrix", m);
+
+		
+		vec3 lightPos = projPos;  // World coords
+		lightFrustum->orient(lightPos, projAt, vec3(0.0f, -1.0f, 0.0f));
+		lightFrustum->setPerspective(24.2f, 1.0f, 1.0f, 50.0f);
+		lightPV = shadowBias * lightFrustum->getProjectionMatrix() * lightFrustum->getViewMatrix();
+
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, kepek[valt]);
 
 		// Pass 1 (shadow map generation)
 		view = lightFrustum->getViewMatrix();
@@ -319,29 +450,61 @@ void keyFunction(GLFWwindow *window, int key, int scanCode, int action, int mods
 		glfwSetWindowShouldClose(window, GL_TRUE);
 	camera.setKey(key, action, deltaTime);
 
-	GLfloat cubeSpeed = 0.2f;
+	GLfloat cubeSpeed = 0.1f;
 
 	if (action == GLFW_REPEAT || action == GLFW_PRESS)
 	{
 		switch (key)
 		{
 		case GLFW_KEY_UP:
-			smallCubePosition += vec3(0.0f, cubeSpeed, 0.0f);
+			nyulPosition += vec3(0.0f, cubeSpeed, 0.0f);
 			break;
 		case GLFW_KEY_DOWN:
-			smallCubePosition -= vec3(0.0f, cubeSpeed, 0.0f);
+			nyulPosition -= vec3(0.0f, cubeSpeed, 0.0f);
 			break;
 		case GLFW_KEY_RIGHT:
-			smallCubePosition += vec3(cubeSpeed, 0.0f, 0.0f);
+			nyulPosition += vec3(cubeSpeed, 0.0f, 0.0f);
 			break;
 		case GLFW_KEY_LEFT:
-			smallCubePosition -= vec3(cubeSpeed, 0.0f, 0.0f);
+			nyulPosition -= vec3(cubeSpeed, 0.0f, 0.0f);
+			break;
+		case GLFW_KEY_SPACE:
+			nyulPosition += vec3(0.0f, 0.0f, cubeSpeed);
+			break;
+		case GLFW_KEY_COMMA:
+			nyulPosition -= vec3(0.0f, 0.0f, cubeSpeed);
+			break;
+		case GLFW_KEY_U:
+			projAt += vec3(0.0f, cubeSpeed, 0.0f);
+			break;
+		case GLFW_KEY_J:
+			projAt -= vec3(0.0f, cubeSpeed, 0.0f);
+			break;
+		case GLFW_KEY_K:
+			projAt += vec3(cubeSpeed, 0.0f, 0.0f);
+			break;
+		case GLFW_KEY_H:
+			projAt -= vec3(cubeSpeed, 0.0f, 0.0f);
 			break;
 		case GLFW_KEY_M:
-			smallCubePosition += vec3(0.0f, 0.0f, cubeSpeed);
+			projAt += vec3(0.0f, 0.0f, cubeSpeed);
 			break;
 		case GLFW_KEY_N:
-			smallCubePosition -= vec3(0.0f, 0.0f, cubeSpeed);
+			projAt -= vec3(0.0f, 0.0f, cubeSpeed);
+			break;
+		case GLFW_KEY_P:
+			if (valt < 29)
+			{
+				valt++;
+				cout << valt << endl;
+			}
+			break;
+		case GLFW_KEY_O:
+			if (valt > 0)
+			{
+				valt--;
+				cout << valt << endl;
+			}
 			break;
 		default:
 			break;
