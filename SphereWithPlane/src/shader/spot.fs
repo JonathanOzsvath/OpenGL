@@ -4,9 +4,11 @@ in vec3 Position;
 in vec3 Normal;
 in vec2 TexCoord;
 in vec4 ProjTexCoord;
+in vec4 ShadowCoord;
 
 layout(binding=0) uniform sampler2D Tex1;
 layout(binding=1) uniform sampler2D ProjectorTex;
+layout(binding=2) uniform sampler2DShadow ShadowMap;
 
 struct LightInfo 
 {
@@ -40,7 +42,7 @@ layout( location = 0 ) out vec4 FragColor;
 float piHalf = 1.57079632679;
 float pi = 3.14159265359;
 
-vec3 negyzetSpotLight()
+void negyzetSpotLight(out vec3 ambient, out vec3 oDiffSpec)
 {
     float x = tan(radians(Spot.alfa));
     float y = tan(radians(Spot.beta));
@@ -74,51 +76,84 @@ vec3 negyzetSpotLight()
     float vetitettX = cos(vetitettAlfa) * tan(gamma);
     float vetitettY = cos(vetitettBeta) * tan(gamma);
 
-    vec3 ambient = Spot.Intensity * Material.Ka;
 
     if (vetitettX < x && vetitettY < y)
     {
-       float spotFactor = pow( dot(-ptf, spotDir), Spot.exponent );
+        float spotFactor = pow( dot(-ptf, spotDir), Spot.exponent );
         vec3 v = normalize(vec3(-Position));
         vec3 h = normalize( v + ptf );
 
-        return
-            ambient +
+        ambient = Spot.Intensity * Material.Ka;
+        oDiffSpec = 
             spotFactor * Spot.Intensity * (
-              Material.Kd * max( dot(ptf, Normal), 0.0 ) +
-              Material.Ks * pow( max( dot(h,Normal), 0.0 ), Material.Shininess )
-           );
+              Material.Kd * max( dot(ptf, Normal), 0.0 ));
     } 
     else 
     {
-        return ambient;
+        ambient = vec3(0.0);
+        oDiffSpec = vec3(0.0);
     }
 }
 
-vec3 ads( )
-{
-    vec3 s = normalize( vec3(Light.Position) - Position );
-    vec3 v = normalize(vec3(-Position));
-    vec3 r = reflect( -s, Normal );
+void phongModel( vec3 pos, vec3 norm,out vec3 odiff, out vec3 ospec ) {
+    vec3 n = Normal;
+    if( !gl_FrontFacing ) n = -n;
+    vec3 s = normalize(vec3(Light.Position) - Position);
+    vec3 v = normalize(-Position.xyz);
+    vec3 r = reflect( -s, n );
+    float sDotN = max( dot(s,n), 0.0 );
+    vec3 diffuse = Light.Intensity * Material.Kd * sDotN;
+    vec3 spec = vec3(0.0);
+    if( sDotN > 0.0 )
+        spec = Light.Intensity * Material.Ks *
+            pow( max( dot(r,v), 0.0 ), Material.Shininess );
 
-    return
-          Light.Intensity * ( Material.Ka +
-          Material.Kd * max( dot(s, Normal), 0.0 ) +
-          Material.Ks * pow( max( dot(r,v), 0.0 ), Material.Shininess ) );
+    ospec = spec;
+    odiff = diffuse;
 }
 
 
-void main() {
-    vec3 Color = vec3(0.0);
-    Color = negyzetSpotLight();
+subroutine void RenderPassType();
+subroutine uniform RenderPassType RenderPass;
 
-    vec4 texColor = texture( Tex1, TexCoord );
+subroutine (RenderPassType)
+void shadeWithShadow()
+{
+    vec3 amb1 = Light.Intensity * Material.Ka;
+
+    vec3 diff, spec;
+    phongModel( Position, Normal, diff, spec);
+    //vec3 spotLight = negyzetSpotLight();
+    vec3 amb = vec3(0.0f), diffSpec = vec3(0.0f);
+
+    float closestDepth = textureProj(ShadowMap, ShadowCoord); 
+
+    vec4 color = texture(Tex1, TexCoord);
 
     vec4 projTexColor = vec4(0.0);
-    if( ProjTexCoord.z > 0.0 )
+    if(ProjTexCoord.z > 0.0)
     {
         projTexColor = textureProj( ProjectorTex, ProjTexCoord );
+        //FragColor = (vec4(spotLight,1.0) * shadow) * color;
+        negyzetSpotLight(amb, diffSpec);
+    }
+    else
+    {
+        //FragColor =  vec4(phong, 1.0) * color;
+        closestDepth = 1.0f;
     }
 
-    FragColor = ( vec4(Color,1.0f) + vec4(ads(), 1.0f) ) + projTexColor * 0.5 ;
+    vec3 allAmbient = amb + amb1;
+    vec3 allDiff = diffSpec + (diff);
+    FragColor = vec4((allAmbient + closestDepth * allDiff), 1.0f) * color 
+        + closestDepth * projTexColor * vec4(allDiff, 1.0f);
+}
+
+subroutine (RenderPassType)
+void recordDepth()
+{
+}
+
+void main() {
+    RenderPass();
 }
