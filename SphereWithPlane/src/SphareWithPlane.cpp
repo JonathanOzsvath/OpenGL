@@ -51,6 +51,8 @@ int vetit;
 vector<GLuint> kepek;
 int valt;
 
+vec3 lightPos;
+
 //mozgatható model változó
 vec3 nyulPosition;
 
@@ -107,7 +109,7 @@ void diaLoader()
 {
 	valt = 0;
 	glActiveTexture(GL_TEXTURE1);
-	for (int i = 1; i <= 5; i++)
+	for (int i = 1; i <= 30; i++)
 	{
 		GLuint tmp;
 		glGenTextures(1, &tmp);
@@ -190,8 +192,8 @@ void drawScene()
 
 	prog.setUniform("Material.Kd", 0.9f, 0.5f, 0.3f);
 	prog.setUniform("Material.Ks", 0.95f, 0.95f, 0.95f);
-	prog.setUniform("Material.Ka", 0.9f * 0.3f, 0.5f * 0.3f, 0.3f * 0.3f);
-	prog.setUniform("Material.Shininess", 100.0f);
+	prog.setUniform("Material.Ka", 0.3f, 0.3f, 0.3f);
+	prog.setUniform("Material.Shininess", 20.0f);
 
 	prog.setUniform("texOff", true);
 	model = mat4(1.0f);
@@ -223,6 +225,7 @@ void drawScene()
 	prog.setUniform("texOff", true);
 	model = mat4(1.0f);
 	model *= translate(vec3(0.0f, 10.0f, 0.0f));
+	model *= rotate(radians(180.0f), vec3(1.0f, 0.0f, 0.0f));
 	setMatrices();
 	padlo->render();
 	prog.setUniform("texOff", false);
@@ -230,7 +233,7 @@ void drawScene()
 	prog.setUniform("Material.Kd", 0.7f, 0.7f, 0.7f);
 	prog.setUniform("Material.Ks", 0.9f, 0.9f, 0.9f);
 	prog.setUniform("Material.Ka", 0.2f, 0.2f, 0.2f);
-	prog.setUniform("Material.Shininess", 100.0f);
+	prog.setUniform("Material.Shininess", 50.0f);
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, fal);
@@ -359,6 +362,8 @@ void init()
 	projUp = vec3(0.0f, -1.0f, 0.0f);
 	
 	lightFrustum = new Frustum(Projection::PERSPECTIVE);
+	lightPos = projPos;  // World coords
+	lightFrustum->setPerspective(24.2f, 1.0f, 1.0f, 50.0f);
 
 	// Set up the framebuffer object
 	setupFBO();
@@ -379,8 +384,8 @@ void init()
 	prog.setUniform("ShadowMap", depthTex);
 
 	//világítás init
-	prog.setUniform("Spot.Intensity", vec3(0.5f));
-	prog.setUniform("Spot.exponent", 25.0f);
+	prog.setUniform("Spot.Intensity", vec3(0.2f));
+	prog.setUniform("Spot.exponent", 45.0f);
 	prog.setUniform("Spot.alfa", 18.0f);
 	prog.setUniform("Spot.beta", 14.0f);
 
@@ -405,10 +410,7 @@ void mainloop()
 		// Set the uniform variable
 		prog.setUniform("ProjectorMatrix", m);
 
-		
-		vec3 lightPos = projPos;  // World coords
 		lightFrustum->orient(lightPos, projAt, vec3(0.0f, -1.0f, 0.0f));
-		lightFrustum->setPerspective(24.2f, 1.0f, 1.0f, 50.0f);
 		lightPV = shadowBias * lightFrustum->getProjectionMatrix() * lightFrustum->getViewMatrix();
 
 		glActiveTexture(GL_TEXTURE1);
@@ -429,7 +431,6 @@ void mainloop()
 
 		// Pass 2 (render)
 		view = camera.getView();
-		//prog.setUniform("Light.Position", view * vec4(lightFrustum->getOrigin(), 1.0f));
 		projection = projection1;
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -468,10 +469,10 @@ void keyFunction(GLFWwindow *window, int key, int scanCode, int action, int mods
 		case GLFW_KEY_LEFT:
 			nyulPosition -= vec3(cubeSpeed, 0.0f, 0.0f);
 			break;
-		case GLFW_KEY_SPACE:
+		case GLFW_KEY_PERIOD:
 			nyulPosition += vec3(0.0f, 0.0f, cubeSpeed);
 			break;
-		case GLFW_KEY_COMMA:
+		case GLFW_KEY_SLASH:
 			nyulPosition -= vec3(0.0f, 0.0f, cubeSpeed);
 			break;
 		case GLFW_KEY_U:
